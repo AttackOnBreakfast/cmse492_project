@@ -1,0 +1,8 @@
+matminer==0.8.0
+pandas==2.2.2
+matplotlib==3.9.2
+seaborn==0.13.2
+scikit-learn==1.5.2
+missingno==0.5.2
+numpy>=1.26.0
+pymatgen==2024.7.18
