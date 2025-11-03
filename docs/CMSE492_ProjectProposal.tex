@@ -1,0 +1,184 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CMSE 492 Project Proposal
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[aps,prl,preprint,groupedaddress]{revtex4-2}
+
+% --- Packages ---
+\usepackage{graphicx}
+\usepackage{dcolumn}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{pgfgantt}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=cyan,
+    citecolor=blue
+}
+
+\begin{document}
+
+\title{Predicting Exfoliation Energy of 2D Materials Using Machine Learning}
+
+\author{Artemiy Filippov}
+\email{filippo37@msu.edu}
+\affiliation{Department of Computational Mathematics, Science and Engineering\\
+Michigan State University, East Lansing, MI 48824}
+
+\date{\today}
+
+\begin{abstract}
+This project predicts the exfoliation energy of two-dimensional (2D) materials using supervised machine learning. Exfoliation energy, measured in eV/atom, quantifies interlayer bonding strength and governs ease of isolating single layers. Density functional theory (DFT) gives accurate results but is computationally expensive. Using the MatBench JDFT-2D dataset and Matminer’s Magpie/Density descriptors, I performed exploratory data analysis revealing nonlinear, heteroscedastic feature–target relations. Linear regression underfits, motivating nonlinear models. Future stages compare Random Forest and Neural Network regressors to evaluate nonlinear gains via MAE and RMSE. The goal is a reproducible, interpretable pipeline for fast materials screening.
+\end{abstract}
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Background and Motivation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+2D materials such as graphene and transition-metal dichalcogenides exhibit unique physical and electronic properties. The exfoliation energy—the energy to separate one atomic layer from the bulk—dictates synthesizability. While DFT provides accurate estimates, it is costly.
+
+Machine learning offers fast approximations of DFT-level accuracy. Prior MatBench results show ML can capture structure–property relations via compositional and structural descriptors. This project builds ML regressors to predict exfoliation energy efficiently and interprets which physical features dominate.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data Description}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The dataset is the \textbf{MatBench JDFT-2D} benchmark (Ward et al., 2020), derived from the Materials Project database. It contains $\sim$636 samples of layered compounds with exfoliation energies computed via DFT (vdW-optB88 functional).  
+
+Features: dozens of composition- and structure-based descriptors from Matminer’s \texttt{MagpieData} and \texttt{DensityFeatures}.  
+Target: exfoliation energy (eV/atom).
+
+The energy distribution (Fig.~\ref{fig:target_dist}) is strongly right-skewed—most materials are weakly bound ($<200$ eV/atom), with few outliers above 1000 eV/atom. Correlation analysis (Fig.~\ref{fig:correlation}) shows weak linear trends; thus, nonlinear models are needed.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exploratory Data Analysis}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Figures \ref{fig:target_dist}–\ref{fig:baseline} summarize EDA and baseline performance. Scatter plots show weak, nonlinear dependencies on density and Mendeleev number. The baseline linear regression (Fig.~\ref{fig:baseline}) exhibits high error and no linear correlation, confirming model underfit.
+
+\vspace{-1em}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.58\linewidth]{exfoliation_distribution.png}
+\caption{Exfoliation-energy distribution: most samples below 200 eV/atom, with a long high-energy tail.}
+\label{fig:target_dist}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\linewidth]{feature_correlation_heatmap.png}
+\caption{Correlation heatmap for major compositional and structural descriptors. Nonlinear patterns dominate.}
+\label{fig:correlation}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.58\linewidth]{exfoliation_vs_density.png}
+\caption{Exfoliation energy vs.\ density showing nonlinear spread at low densities.}
+\label{fig:scatter_density}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.58\linewidth]{baseline_actual_vs_predicted.png}
+\caption{Baseline linear regression: predicted vs.\ actual exfoliation energies. Poor correlation indicates underfit.}
+\label{fig:baseline}
+\end{figure}
+
+\pagebreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Proposed Methodology}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The task is framed as supervised regression. Three models of increasing complexity will be benchmarked:
+
+1. \textbf{Linear Regression} — interpretable baseline.  
+2. \textbf{Random Forest Regressor} — nonlinear ensemble with feature-importance insights.  
+3. \textbf{Feed-Forward Neural Network} — small MLP (2–3 layers, ReLU + Adam) for capturing nonlinear effects.
+
+All models will be built with scikit-learn (and Keras for the NN) using 80/20 train–test splits and $k$-fold cross-validation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Evaluation Framework}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Performance metrics:
+
+\[
+\text{MAE} = \frac{1}{n} \sum |y_i - \hat{y}_i|, \quad
+\text{RMSE} = \sqrt{\frac{1}{n}\sum (y_i - \hat{y}_i)^2}.
+\]
+
+MAE reflects mean deviation; RMSE penalizes large errors. Success criterion: at least 50\% MAE reduction relative to the baseline. Cross-validation and residual analysis will monitor generalization.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Timeline and Milestones}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{figure}[H]
+\centering
+\resizebox{0.9\linewidth}{!}{%
+\begin{ganttchart}[
+    hgrid,
+    vgrid,
+    x unit=0.4cm,
+    y unit chart=0.5cm,
+    bar label font=\small,
+    group label font=\bfseries\small,
+    milestone label font=\itshape\small,
+    bar height=0.45,
+    group/.append style={fill=gray!20, rounded corners=3pt},
+    bar/.append style={rounded corners=3pt},
+    milestone/.append style={rounded corners=3pt},
+    progress label text={},
+    time slot format=isodate
+]{2025-10-28}{2025-12-04}
+
+\gantttitlecalendar{year, month=name, week}\\
+\ganttgroup{Setup \& Baseline}{2025-10-28}{2025-11-03}\\
+\ganttbar[bar/.append style={fill=teal!40}]{Repo Setup \& EDA}{2025-10-28}{2025-11-03}\\
+\ganttgroup{Model Development}{2025-11-04}{2025-11-24}\\
+\ganttbar[bar/.append style={fill=orange!45}]{Random Forest + Features}{2025-11-04}{2025-11-10}\\
+\ganttbar[bar/.append style={fill=purple!35}]{Neural Network}{2025-11-11}{2025-11-17}\\
+\ganttbar[bar/.append style={fill=blue!35}]{Model Tuning \& Eval}{2025-11-18}{2025-11-24}\\
+\ganttgroup{Reporting \& Presentation}{2025-11-25}{2025-12-04}\\
+\ganttbar[bar/.append style={fill=green!40}]{Report \& Figures}{2025-11-25}{2025-12-01}\\
+\ganttmilestone[milestone/.append style={fill=red!60}]{Presentation \& Final Repo}{2025-12-04}\\
+\end{ganttchart}
+}
+\caption{Project timeline for CMSE 492, spanning late October–early December 2025. Thanksgiving week serves as buffer time for writing and figure refinement.}
+\label{fig:gantt}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This project develops interpretable ML models for exfoliation-energy prediction. Combining linear, ensemble, and neural approaches enables a systematic study of model complexity vs.\ accuracy. Early baselines confirm nonlinear dependencies. The final stage will include SHAP-based feature importance, performance comparison, and code release on GitHub.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{acknowledgments}
+I thank Dr.~Luciano Silvestri and the CMSE 492 teaching team for their guidance.  
+All code and data are publicly available at: \url{https://github.com/AttackOnBreakfast/cmse492_project}.
+\end{acknowledgments}
+
+\begin{thebibliography}{99}
+\bibitem{matbench2020}
+W.~Ward et al., \textit{npj Computational Materials}, 2020.  
+\bibitem{geron}
+A.~Géron, \textit{Hands-On Machine Learning}, O’Reilly Media, 2022.  
+\bibitem{materialsproject}
+A.~Jain et al., \textit{APL Materials}, 2013.  
+\end{thebibliography}
+
+\end{document}
