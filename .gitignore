@@ -206,14 +206,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# --- CMSE492 project-specific ignores ---
-# Raw datasets and generated outputs
-data/raw/
-data/processed/*.csv
-figures/*.png
-figures/*.jpg
-figures/*.pdf
-
 # Jupyter auto-saves and checkpoints
 *.ipynb_checkpoints/
 
